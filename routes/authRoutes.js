@@ -44,8 +44,37 @@ router.post("/login", async (req, res) => {
     console.log(error);
 
     res.status(500).json(error);
-
   }
 
-});
+})
+
+router.put('/change-password/:id',async(req,res)=>{
+  try{
+    const{currentPassword,newPassword} = req.body;
+
+    // Find the user
+    const user = await User.findById(req.params.id)
+
+    if(!user){
+      return res.status(404).json({message:"User not found"})
+    }
+
+    // old vs new
+    const isMatch = await bcrypt.compare(currentPassword,user.password);
+    if(!ismatch){
+      return res.status(400).json({message:"Current password is invalid"})
+    }
+    // Hashpassword
+    const Hashpassword = await bcrypt.hash(newPassword,10);
+    await User.save()
+    res.status(200).json({message:"Password updated successfully"})
+
+  }catch(err){
+    console.log(err);
+    
+    res.status(500).json({
+      message:"server error"
+    })
+  }
+})
 module.exports = router

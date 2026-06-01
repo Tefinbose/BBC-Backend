@@ -99,11 +99,7 @@ router.post("/register", async (req, res) => {
     };
 
     // Send Response
-    res.status(201).json({
-      message: "Registration Successful",
-      token,
-      user: safeUser,
-    });
+    res.status(201).json({ message: "Registration Successful",token, user: safeUser,});
   } catch (error) {
     console.log(error);
 
@@ -113,32 +109,33 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.put("/change-password/:id", async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
+router.put(
+  "/change-password/:id",
+  async (req, res) => {
 
-    // Find the user
-    const user = await User.findById(req.params.id);
+    try {
+      const user = await User.findById( req.params.id);
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+      const hashedPassword =
+        await bcrypt.hash(req.body.newPassword,10);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      user.password = hashedPassword;
+
+      await user.save();
+
+      res.status(200).json({message:"Password updated successfully",});
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({ message: error.message, });
     }
-
-    // old vs new
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!ismatch) {
-      return res.status(400).json({ message: "Current password is invalid" });
-    }
-    // Hashpassword
-    const Hashpassword = await bcrypt.hash(newPassword, 10);
-    await User.save();
-    res.status(200).json({ message: "Password updated successfully" });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      message: "server error",
-    });
   }
-});
+);
+
 module.exports = router;
